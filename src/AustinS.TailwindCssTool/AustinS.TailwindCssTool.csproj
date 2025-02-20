@@ -10,7 +10,7 @@
         <PackageProjectUrl>https://github.com/austins/AustinS.TailwindCssTool</PackageProjectUrl>
         <RepositoryUrl>https://github.com/austins/AustinS.TailwindCssTool</RepositoryUrl>
         <PackageTags>tool tailwind tailwindcss css</PackageTags>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,5 +19,9 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.2"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\LICENSE" Pack="true" PackagePath=""/>
     </ItemGroup>
 </Project>
