@@ -4,6 +4,13 @@
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>tailwindcss</ToolCommandName>
         <PackageOutputPath>.\nupkg</PackageOutputPath>
+        <Description>A .NET tool to install the standalone Tailwind CSS CLI, and build or watch a CSS file.</Description>
+        <Authors>Austin S.</Authors>
+        <Copyright>Austin S.</Copyright>
+        <PackageProjectUrl>https://github.com/austins/AustinS.TailwindCssTool</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/austins/AustinS.TailwindCssTool</RepositoryUrl>
+        <PackageTags>tool tailwind tailwindcss css</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
     <ItemGroup>
