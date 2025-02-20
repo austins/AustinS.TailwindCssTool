@@ -411,3 +411,5 @@ FodyWeavers.xsd
 .DS_Store
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+nupkg/
