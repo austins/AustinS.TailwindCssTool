@@ -1,13 +1,14 @@
-﻿using ConsoleAppFramework;
+﻿using AustinS.TailwindCssTool.Binary;
+using ConsoleAppFramework;
 
 namespace AustinS.TailwindCssTool.Commands;
 
 [RegisterCommands]
 internal sealed class InstallCommand
 {
-    private readonly Binary.BinaryManager _binaryManager;
+    private readonly BinaryManager _binaryManager;
 
-    public InstallCommand(Binary.BinaryManager binaryManager)
+    public InstallCommand(BinaryManager binaryManager)
     {
         _binaryManager = binaryManager;
     }
