@@ -41,8 +41,8 @@ internal sealed partial class BinaryProcess : IDisposable
             }
         };
 
-        _process.OutputDataReceived += (_, e) => LogOutput(e.Data);
-        _process.ErrorDataReceived += (_, e) => LogOutput(e.Data);
+        _process.OutputDataReceived += LogOutput;
+        _process.ErrorDataReceived += LogOutput;
 
         _process.Start();
         _process.BeginOutputReadLine();
@@ -68,11 +68,11 @@ internal sealed partial class BinaryProcess : IDisposable
         }
     }
 
-    private void LogOutput(string? output)
+    private void LogOutput(object _, DataReceivedEventArgs e)
     {
-        if (!string.IsNullOrWhiteSpace(output))
+        if (!string.IsNullOrWhiteSpace(e.Data))
         {
-            _log.Output(output);
+            _log.Output(e.Data);
         }
     }
 
