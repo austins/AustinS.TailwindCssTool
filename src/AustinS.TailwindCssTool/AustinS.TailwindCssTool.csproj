@@ -11,6 +11,7 @@
         <RepositoryUrl>https://github.com/austins/AustinS.TailwindCssTool</RepositoryUrl>
         <PackageTags>tool tailwind tailwindcss css</PackageTags>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
