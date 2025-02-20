@@ -12,6 +12,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Build.props = Directory.Build.props
 		LICENSE = LICENSE
 		README.md = README.md
+		renovate.json = renovate.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{709C01A0-B9E4-486D-91F3-38BA0558F562}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{B254A8E7-1CED-4A6B-B875-70ED320D8C5F}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build.yml = .github\workflows\build.yml
+		.github\workflows\pr.yml = .github\workflows\pr.yml
+		.github\workflows\test.yml = .github\workflows\test.yml
 	EndProjectSection
 EndProject
 Global
@@ -27,5 +37,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E7B87320-3F57-4ADD-8DE3-329F277F78E8} = {49994079-1098-4BC5-A9F3-A711DFE6E024}
+		{709C01A0-B9E4-486D-91F3-38BA0558F562} = {8F064B9E-B296-48FB-981A-923CF5599768}
+		{B254A8E7-1CED-4A6B-B875-70ED320D8C5F} = {709C01A0-B9E4-486D-91F3-38BA0558F562}
 	EndGlobalSection
 EndGlobal
