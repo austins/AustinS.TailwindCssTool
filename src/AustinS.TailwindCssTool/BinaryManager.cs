@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System.Net;
 using System.Runtime.InteropServices;
 
@@ -75,6 +76,12 @@ internal sealed partial class BinaryManager
             }
 
             throw;
+        }
+
+        if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+        {
+            using var chmodProcess = Process.Start("chmod", $"+x {BinaryFilePath}");
+            await chmodProcess.WaitForExitAsync(cancellationToken);
         }
     }
 
