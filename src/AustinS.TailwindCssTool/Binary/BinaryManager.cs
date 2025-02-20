@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Runtime.InteropServices;
 
-namespace AustinS.TailwindCssTool;
+namespace AustinS.TailwindCssTool.Binary;
 
 internal sealed partial class BinaryManager
 {

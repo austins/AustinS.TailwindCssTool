@@ -1,22 +1,24 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace AustinS.TailwindCssTool;
+namespace AustinS.TailwindCssTool.Binary;
 
 internal sealed class BinaryProcessFactory
 {
-    private readonly string _binaryFilePath;
+    private readonly BinaryManager _binaryManager;
     private readonly ILoggerFactory _loggerFactory;
 
     public BinaryProcessFactory(BinaryManager binaryManager, ILoggerFactory loggerFactory)
     {
-        _binaryFilePath = binaryManager.BinaryFilePath;
+        _binaryManager = binaryManager;
         _loggerFactory = loggerFactory;
     }
 
     public BinaryProcess Start(string input, string output, bool minify = false, bool watch = false)
     {
+        _binaryManager.EnsureBinaryExists();
+
         return new BinaryProcess(
-            _binaryFilePath,
+            _binaryManager.BinaryFilePath,
             input,
             output,
             _loggerFactory.CreateLogger<BinaryProcess>(),

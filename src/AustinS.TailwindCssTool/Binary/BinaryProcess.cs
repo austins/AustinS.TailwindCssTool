@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
-namespace AustinS.TailwindCssTool;
+namespace AustinS.TailwindCssTool.Binary;
 
 internal sealed partial class BinaryProcess : IDisposable
 {
