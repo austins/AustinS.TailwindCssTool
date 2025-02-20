@@ -106,7 +106,13 @@ internal sealed partial class BinaryManager
 
         if (OperatingSystem.IsLinux())
         {
-            return $"tailwindcss-linux-{osArchIdentifier}";
+            var linuxBinaryFileName = $"tailwindcss-linux-{osArchIdentifier}";
+            if (File.Exists("/lib/ld-musl-x86_64.so.1") || File.Exists("/lib/libc.musl-x86_64.so.1"))
+            {
+                linuxBinaryFileName += "-musl";
+            }
+
+            return linuxBinaryFileName;
         }
 
         if (OperatingSystem.IsMacOS())
