@@ -6,6 +6,6 @@ using Microsoft.Extensions.Logging;
 var app = ConsoleApp
     .Create()
     .ConfigureLogging(logging => logging.AddSimpleConsole(o => o.TimestampFormat = "HH:mm:ss.fff "))
-    .ConfigureServices(services => { services.AddSingleton<BinaryManager>(); });
+    .ConfigureServices(services => { services.AddSingleton<BinaryManager>().AddSingleton<BinaryProcessFactory>(); });
 
 await app.RunAsync(args);

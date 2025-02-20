@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Net;
-using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace AustinS.TailwindCssTool;
@@ -14,16 +13,11 @@ internal sealed partial class BinaryManager
     public BinaryManager(ILogger<BinaryManager> logger)
     {
         _binaryFileName = DetermineBinaryFileName();
-
-        BinaryFilePath = Path.Combine(
-            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!,
-            "binaries",
-            _binaryFileName);
-
+        BinaryFilePath = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory)!, "binaries", _binaryFileName);
         _log = new Log(logger);
     }
 
-    private string BinaryFilePath { get; }
+    public string BinaryFilePath { get; }
 
     public void EnsureBinaryExists()
     {
@@ -33,16 +27,33 @@ internal sealed partial class BinaryManager
         }
     }
 
-    public async Task DownloadAsync(CancellationToken cancellationToken, string? version = null)
+    public async Task DownloadAsync(string? version, bool overwrite, CancellationToken cancellationToken)
     {
+        if (!string.IsNullOrWhiteSpace(version))
+        {
+#pragma warning disable CA1308
+            version = version.Trim().ToLowerInvariant();
+#pragma warning restore CA1308
+
+            if (!version.StartsWith('v'))
+            {
+                throw new InvalidOperationException("Invalid version. It must be in a format such as v4.0.0.");
+            }
+        }
+
         if (File.Exists(BinaryFilePath))
         {
             _log.Exists();
+
+            if (!overwrite)
+            {
+                return;
+            }
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(BinaryFilePath)!);
 
-        var url = GetDownloadUrl();
+        var url = GetDownloadUrl(version);
         _log.Downloading(url);
 
         using var httpClient = new HttpClient();
@@ -100,35 +111,15 @@ internal sealed partial class BinaryManager
             "Unsupported operating system. Only Windows, Linux, and MacOS are supported.");
     }
 
-    private Uri GetDownloadUrl(string? version = null)
+    private Uri GetDownloadUrl(string? version)
     {
-        string gitHubUrlPath;
-        if (string.IsNullOrWhiteSpace(version))
-        {
-            gitHubUrlPath = "latest/download";
-        }
-        else
-        {
-#pragma warning disable CA1308
-            version = version.Trim().ToLowerInvariant();
-#pragma warning restore CA1308
-
-            if (!version.StartsWith('v'))
-            {
-                throw new InvalidOperationException("Invalid version. It must be in a format such as v4.0.0.");
-            }
-
-            gitHubUrlPath = $"download/{version}";
-        }
-
-        return new Uri(GitHubBaseUrl, $"{gitHubUrlPath}/{_binaryFileName}");
+        var gitHubPath = string.IsNullOrWhiteSpace(version) ? "latest/download" : $"download/{version}";
+        return new Uri(GitHubBaseUrl, $"{gitHubPath}/{_binaryFileName}");
     }
 
     private sealed partial class Log(ILogger logger)
     {
-        [LoggerMessage(
-            Level = LogLevel.Information,
-            Message = "A Tailwind CSS binary already exists. The file will be overwritten.")]
+        [LoggerMessage(Level = LogLevel.Information, Message = "A Tailwind CSS binary already exists.")]
         public partial void Exists();
 
         [LoggerMessage(Level = LogLevel.Information, Message = "Downloading latest Tailwind CSS binary from: {url}")]

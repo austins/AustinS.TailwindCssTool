@@ -8,52 +8,58 @@ namespace AustinS.TailwindCssTool;
 internal sealed class Commands
 {
     private readonly BinaryManager _binaryManager;
+    private readonly BinaryProcessFactory _binaryProcessFactory;
 
-    public Commands(BinaryManager binaryManager)
+    public Commands(BinaryManager binaryManager, BinaryProcessFactory binaryProcessFactory)
     {
         _binaryManager = binaryManager;
+        _binaryProcessFactory = binaryProcessFactory;
     }
 
     /// <summary>
     /// Install the Tailwind CSS binary.
     /// </summary>
-    /// <param name="version">The version of Tailwind CSS to install. If not specified, the latest is installed.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="tailwindVersion">-t, The version of Tailwind CSS to install (e.g. v4.0.0, v3.4.17). If not specified, the latest is installed.</param>
+    /// <param name="overwrite">-o, Whether to overwrite an existing Tailwind CSS binary.</param>
     [Command("install")]
-    public Task InstallAsync([Argument] string? version = null)
+    public Task InstallAsync(
+        CancellationToken cancellationToken,
+        string? tailwindVersion = null,
+        bool overwrite = false)
     {
-        return _binaryManager.DownloadAsync(CancellationToken.None, version);
+        return _binaryManager.DownloadAsync(tailwindVersion, overwrite, cancellationToken);
     }
 
     /// <summary>
     /// Generate Tailwind CSS output.
     /// </summary>
-    /// <param name="input">The input CSS file path.</param>
-    /// <param name="output">The output CSS file path.</param>
+    /// <param name="input">-i, The input CSS file path.</param>
+    /// <param name="output">-o, The output CSS file path.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <param name="minify">Whether to minify the output CSS.</param>
+    /// <param name="minify">-m, Whether to minify the output CSS.</param>
     [Command("build")]
-    public void Build(
-        [Argument] string input,
-        [Argument] string output,
-        CancellationToken cancellationToken,
-        bool minify = false)
+    public async Task BuildAsync(string input, string output, CancellationToken cancellationToken, bool minify = false)
     {
         _binaryManager.EnsureBinaryExists();
 
-        Console.Write("hello");
+        using var process = _binaryProcessFactory.Start(input, output, minify);
+        await process.WaitForExitAsync(cancellationToken);
     }
 
     /// <summary>
     /// Watch for changes and generate Tailwind CSS output on any change.
     /// </summary>
-    /// <param name="input">The input CSS file path.</param>
-    /// <param name="output">The output CSS file path.</param>
-    /// <param name="minify">Whether to minify the output CSS.</param>
+    /// <param name="input">-i, The input CSS file path.</param>
+    /// <param name="output">-o, The output CSS file path.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="minify">-m, Whether to minify the output CSS.</param>
     [Command("watch")]
-    public void Watch([Argument] string input, [Argument] string output, bool minify = false)
+    public async Task WatchAsync(string input, string output, CancellationToken cancellationToken, bool minify = false)
     {
         _binaryManager.EnsureBinaryExists();
 
-        Console.Write("hello");
+        using var process = _binaryProcessFactory.Start(input, output, minify, true);
+        await process.WaitForExitAsync(cancellationToken);
     }
 }
