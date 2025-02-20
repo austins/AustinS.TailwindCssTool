@@ -22,7 +22,3 @@ You can use `dotnet tool run tailwindcss` or the shorthand `dotnet tailwindcss`.
     - `-i` or `--input` The input CSS file path.
     - `-o` or `--output` The output CSS file path.
     - (Optional) `-m` or `--minify` Whether to minify the output CSS.
-
-## Development
-
-Pack for NuGet: `dotnet pack ./src/AustinS.TailwindCssTool -c Release`
