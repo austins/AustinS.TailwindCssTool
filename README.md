@@ -2,11 +2,13 @@
 
 A .NET tool to install the standalone Tailwind CSS CLI, and build or watch a CSS file.
 
-## Installation
+## Usage
+
+### Installation
 - Local from a project directory: `dotnet new tool-manifest` then `dotnet tool install --local AustinS.TailwindCssTool`
 - Global: `dotnet tool install --global AustinS.TailwindCssTool`
 
-## Commands:
+### Commands:
 You can use `dotnet tool run tailwindcss` or the shorthand `dotnet tailwindcss`.
 
 - `dotnet tailwindcss install` Install the Tailwind CSS binary.
@@ -20,3 +22,7 @@ You can use `dotnet tool run tailwindcss` or the shorthand `dotnet tailwindcss`.
     - `-i` or `--input` The input CSS file path.
     - `-o` or `--output` The output CSS file path.
     - (Optional) `-m` or `--minify` Whether to minify the output CSS.
+
+## Development
+
+Pack for NuGet: `dotnet pack ./src/AustinS.TailwindCssTool -c Release`
