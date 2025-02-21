@@ -26,13 +26,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\deploy.yml = .github\workflows\deploy.yml
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions", "actions", "{7B808E67-85F7-42E1-B16D-636F25A0FE16}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "setup-dotnet-environment", "setup-dotnet-environment", "{C8491AC7-DADA-410B-AC97-96F8E0811C91}"
-	ProjectSection(SolutionItems) = preProject
-		.github\actions\setup-dotnet-environment\action.yml = .github\actions\setup-dotnet-environment\action.yml
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,7 +41,5 @@ Global
 		{E7B87320-3F57-4ADD-8DE3-329F277F78E8} = {49994079-1098-4BC5-A9F3-A711DFE6E024}
 		{709C01A0-B9E4-486D-91F3-38BA0558F562} = {8F064B9E-B296-48FB-981A-923CF5599768}
 		{B254A8E7-1CED-4A6B-B875-70ED320D8C5F} = {709C01A0-B9E4-486D-91F3-38BA0558F562}
-		{7B808E67-85F7-42E1-B16D-636F25A0FE16} = {709C01A0-B9E4-486D-91F3-38BA0558F562}
-		{C8491AC7-DADA-410B-AC97-96F8E0811C91} = {7B808E67-85F7-42E1-B16D-636F25A0FE16}
 	EndGlobalSection
 EndGlobal
