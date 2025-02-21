@@ -1,4 +1,4 @@
-﻿using AustinS.TailwindCssTool;
+﻿using AustinS.TailwindCssTool.Binary;
 using ConsoleAppFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

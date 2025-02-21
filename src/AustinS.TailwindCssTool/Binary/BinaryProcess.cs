@@ -1,8 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
-namespace AustinS.TailwindCssTool;
+namespace AustinS.TailwindCssTool.Binary;
 
+/// <summary>
+/// A process of the Tailwind CSS standalone CLI binary.
+/// </summary>
 internal sealed partial class BinaryProcess : IDisposable
 {
     private readonly Log _log;
@@ -18,6 +21,7 @@ internal sealed partial class BinaryProcess : IDisposable
     {
         _log = new Log(logger);
 
+        // Set up the arguments.
         var arguments = $"-i {input} -o {output}";
         if (minify)
         {
@@ -29,6 +33,7 @@ internal sealed partial class BinaryProcess : IDisposable
             arguments += " --watch";
         }
 
+        // Initialize the process.
         _process = new Process
         {
             StartInfo = new ProcessStartInfo(binaryFilePath, arguments)
@@ -41,14 +46,19 @@ internal sealed partial class BinaryProcess : IDisposable
             }
         };
 
-        _process.OutputDataReceived += (_, e) => LogOutput(e.Data);
-        _process.ErrorDataReceived += (_, e) => LogOutput(e.Data);
+        _process.OutputDataReceived += LogOutput;
+        _process.ErrorDataReceived += LogOutput;
 
+        // Start the process.
         _process.Start();
         _process.BeginOutputReadLine();
         _process.BeginErrorReadLine();
     }
 
+    /// <summary>
+    /// Wait for the process to exit gracefully or a cancellation is requested, then dispose of the process.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public async Task WaitForExitAsync(CancellationToken cancellationToken)
     {
         if (_process?.HasExited == false)
@@ -58,6 +68,9 @@ internal sealed partial class BinaryProcess : IDisposable
         }
     }
 
+    /// <summary>
+    /// Dispose of the process instance if it exists.
+    /// </summary>
     public void Dispose()
     {
         if (_process is not null)
@@ -68,11 +81,11 @@ internal sealed partial class BinaryProcess : IDisposable
         }
     }
 
-    private void LogOutput(string? output)
+    private void LogOutput(object _, DataReceivedEventArgs e)
     {
-        if (!string.IsNullOrWhiteSpace(output))
+        if (!string.IsNullOrWhiteSpace(e.Data))
         {
-            _log.Output(output);
+            _log.Output(e.Data);
         }
     }
 

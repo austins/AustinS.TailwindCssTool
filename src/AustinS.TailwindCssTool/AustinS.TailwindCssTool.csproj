@@ -3,7 +3,6 @@
         <OutputType>Exe</OutputType>
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>tailwindcss</ToolCommandName>
-        <PackageOutputPath>.\nupkg</PackageOutputPath>
         <Description>A .NET tool to install the standalone Tailwind CSS CLI, and build or watch a CSS file.</Description>
         <Authors>Austin S.</Authors>
         <Copyright>Austin S.</Copyright>
