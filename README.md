@@ -27,7 +27,7 @@ You can use `dotnet tool run tailwindcss` or the shorthand `dotnet tailwindcss`.
 
 Here is an example target you can place in your web project's csproj file to run the build command on every build:
 ```
-<Target Name="RestoreAssets" AfterTargets="BeforeBuild">
+<Target Name="GenerateTailwindCss" AfterTargets="BeforeBuild">
     <Exec Command="dotnet tool restore"/>
     <Exec Command="dotnet tool run tailwindcss install -t v4.0.7"/>
     <Exec Command="dotnet tool run tailwindcss build -i <RELATIVE PATH TO YOUR TAILWIND CSS FILE HERE> -o <RELATIVE PATH TO THE OUTPUT CSS FILE HERE> --minify"/>
