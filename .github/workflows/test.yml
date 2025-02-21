@@ -10,5 +10,7 @@ jobs:
             -   name: Checkout
                 uses: actions/checkout@v4
             -   uses: ./.github/actions/setup-dotnet-environment
-            -   name: Build
-                run: dotnet build -c Release
+            -   name: Build for .NET 8
+                run: dotnet build --framework net8.0 -c Release
+            -   name: Build for .NET 9
+                run: dotnet build --framework net9.0 -c Release
