@@ -6,20 +6,9 @@ on:
 jobs:
     test:
         runs-on: ubuntu-latest
-        strategy:
-            fail-fast: true
-            matrix:
-                include:
-                    -   dotnet-version: 8.x
-                        framework: net8.0
-                    -   dotnet-version: 9.x
-                        framework: net9.0
         steps:
             -   name: Checkout
                 uses: actions/checkout@v4
-            -   name: Set up .NET Core SDK
-                uses: actions/setup-dotnet@v4
-                with:
-                    dotnet-version: ${{ matrix.dotnet-version }}
+            -   uses: ./.github/actions/setup-dotnet-environment
             -   name: Build
-                run: dotnet build --framework ${{ matrix.framework }} -c Release
+                run: dotnet build -c Release
