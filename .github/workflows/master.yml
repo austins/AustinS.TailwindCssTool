@@ -1,11 +1,11 @@
-name: Build
+name: Master
 
 on:
     push:
         branches: [ master ]
 
 concurrency:
-    group: build
+    group: master
     cancel-in-progress: true
 
 jobs:
