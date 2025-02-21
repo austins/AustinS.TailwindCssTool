@@ -5,4 +5,6 @@ runs:
         -   name: Set up .NET Core SDK
             uses: actions/setup-dotnet@v4
             with:
-                dotnet-version: '9.x'
+                dotnet-version: |
+                    9.x
+                    8.x
