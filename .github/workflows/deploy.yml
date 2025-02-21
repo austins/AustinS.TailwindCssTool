@@ -14,5 +14,12 @@ jobs:
             -   name: Checkout
                 uses: actions/checkout@v4
             -   uses: ./.github/actions/setup-dotnet-environment
-            #-   name: Build
-            #    run: dotnet build -c Release
+            -   name: Pack
+                run: dotnet pack ./src/AustinS.TailwindCssTool -c Release /p:Version=$RELEASE_VERSION
+                env:
+                    RELEASE_VERSION: ${{ github.event.release.tag_name }}
+            -   name: Publish to NuGet
+                run: dotnet nuget push ./src/AustinS.TailwindCssTool/bin/Release/AustinS.TailwindCssTool.$RELEASE_VERSION.nupkg -s https://api.nuget.org/v3/index.json -k $NUGET_AUTH_TOKEN
+                env:
+                    RELEASE_VERSION: ${{ github.event.release.tag_name }}
+                    NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
