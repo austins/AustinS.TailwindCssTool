@@ -1,11 +1,11 @@
-name: Master
+name: Main
 
 on:
     push:
-        branches: [ master ]
+        branches: [ main ]
 
 concurrency:
-    group: master
+    group: main
     cancel-in-progress: true
 
 jobs:
