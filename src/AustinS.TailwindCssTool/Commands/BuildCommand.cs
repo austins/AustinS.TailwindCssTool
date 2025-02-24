@@ -23,7 +23,8 @@ internal sealed class BuildCommand
     [Command("build")]
     public async Task HandleAsync(string input, string output, CancellationToken cancellationToken, bool minify = false)
     {
-        using var process = _binaryProcessFactory.Start(input, output, minify);
+        using var process = _binaryProcessFactory.Create(input, output, minify);
+        process.Start();
         await process.WaitForExitAsync(cancellationToken);
     }
 }

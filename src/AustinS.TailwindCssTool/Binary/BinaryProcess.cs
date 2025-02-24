@@ -9,7 +9,7 @@ namespace AustinS.TailwindCssTool.Binary;
 internal sealed partial class BinaryProcess : IDisposable
 {
     private readonly Log _log;
-    private Process? _process;
+    private readonly Process _process;
 
     public BinaryProcess(
         string binaryFilePath,
@@ -48,8 +48,13 @@ internal sealed partial class BinaryProcess : IDisposable
 
         _process.OutputDataReceived += LogOutput;
         _process.ErrorDataReceived += LogOutput;
+    }
 
-        // Start the process.
+    /// <summary>
+    /// Start the process.
+    /// </summary>
+    public void Start()
+    {
         _process.Start();
         _process.BeginOutputReadLine();
         _process.BeginErrorReadLine();
@@ -59,13 +64,9 @@ internal sealed partial class BinaryProcess : IDisposable
     /// Wait for the process to exit gracefully or a cancellation is requested, then dispose of the process.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task WaitForExitAsync(CancellationToken cancellationToken)
+    public Task WaitForExitAsync(CancellationToken cancellationToken)
     {
-        if (_process?.HasExited == false)
-        {
-            await _process.WaitForExitAsync(cancellationToken);
-            Dispose();
-        }
+        return _process.WaitForExitAsync(cancellationToken);
     }
 
     /// <summary>
@@ -73,12 +74,12 @@ internal sealed partial class BinaryProcess : IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_process is not null)
+        if (!_process.HasExited)
         {
             _process.Kill();
-            _process.Dispose();
-            _process = null;
         }
+
+        _process.Dispose();
     }
 
     private void LogOutput(object _, DataReceivedEventArgs e)

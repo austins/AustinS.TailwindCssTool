@@ -23,7 +23,8 @@ internal sealed class WatchCommand
     [Command("watch")]
     public async Task HandleAsync(string input, string output, CancellationToken cancellationToken, bool minify = false)
     {
-        using var process = _binaryProcessFactory.Start(input, output, minify, true);
+        using var process = _binaryProcessFactory.Create(input, output, minify, true);
+        process.Start();
         await process.WaitForExitAsync(cancellationToken);
     }
 }

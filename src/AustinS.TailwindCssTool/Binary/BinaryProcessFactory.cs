@@ -17,14 +17,14 @@ internal sealed class BinaryProcessFactory
     }
 
     /// <summary>
-    /// Create and start a process of the Tailwind CSS standalone CLI binary.
+    /// Create a process of the Tailwind CSS standalone CLI binary.
     /// </summary>
     /// <param name="input">The input CSS file path.</param>
     /// <param name="output">The output CSS file path.</param>
     /// <param name="minify">Whether to minify the output CSS.</param>
     /// <param name="watch">Whether to watch for changes and generate Tailwind CSS output on any change.</param>
-    /// <returns>New started binary process.</returns>
-    public BinaryProcess Start(string input, string output, bool minify = false, bool watch = false)
+    /// <returns>New binary process.</returns>
+    public BinaryProcess Create(string input, string output, bool minify = false, bool watch = false)
     {
         _binaryManager.EnsureBinaryExists();
 
