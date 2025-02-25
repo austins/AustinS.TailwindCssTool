@@ -35,7 +35,7 @@ Here is an example target you can place in your web project's csproj file to run
 ```
 <Target Name="GenerateTailwindCss" AfterTargets="BeforeBuild">
     <Exec Command="dotnet tool restore"/>
-    <Exec Command="dotnet tool run tailwindcss build -t v4.0.8 -i <PATH TO YOUR TAILWIND CSS FILE> -o <PATH THE OUTPUT CSS FILE WILL SAVE TO> --minify"/>
+    <Exec Command="dotnet tool run tailwindcss build -t v4.0.8 -m -i <PATH TO YOUR TAILWIND CSS FILE> -o <PATH THE OUTPUT CSS FILE WILL SAVE TO>"/>
 </Target>
 ```
 
