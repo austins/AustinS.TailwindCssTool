@@ -1,8 +1,11 @@
 ﻿using AustinS.TailwindCssTool.Exceptions;
 using Microsoft.Extensions.Logging;
+using NuGet.Versioning;
 using System.Diagnostics;
 using System.Net;
+using System.Net.Http.Json;
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization;
 
 namespace AustinS.TailwindCssTool.Binary;
 
@@ -11,90 +14,133 @@ namespace AustinS.TailwindCssTool.Binary;
 /// </summary>
 internal sealed partial class BinaryManager
 {
-    /// <summary>
-    /// The base URL for the download on GitHub. Must end with a trailing slash.
-    /// </summary>
-    private static readonly Uri GitHubBaseUrl = new("https://github.com/tailwindlabs/tailwindcss/releases/");
+    public const string HttpClientName = nameof(BinaryManager);
 
-    private readonly string _binaryFileName;
+    /// <summary>
+    /// The path to the binaries directory that resides next to the app.
+    /// </summary>
+    private static readonly string BinariesDirectory = Path.Combine(
+        Path.GetDirectoryName(AppContext.BaseDirectory)!,
+        "binaries");
+
+    /// <summary>
+    /// The base URL for the GitHub API. Must end with a trailing slash.
+    /// </summary>
+    private static readonly Uri GitHubApiBaseUrl = new("https://api.github.com/repos/tailwindlabs/tailwindcss/");
+
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly Log _log;
 
-    public BinaryManager(ILogger<BinaryManager> logger)
+    public BinaryManager(IHttpClientFactory httpClientFactory, ILogger<BinaryManager> logger)
     {
-        _binaryFileName = DetermineBinaryFileName();
-        BinaryFilePath = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory)!, "binaries", _binaryFileName);
+        _httpClientFactory = httpClientFactory;
         _log = new Log(logger);
     }
 
     /// <summary>
-    /// The path that the binary will be/is saved to.
+    /// Ensures that the requested Tailwind CSS standalone CLI binary is downloaded.
     /// </summary>
-    public string BinaryFilePath { get; }
-
-    /// <summary>
-    /// Check if the binary exists on the file system and throws if it doesn't.
-    /// </summary>
-    /// <exception cref="BinaryNotFoundException">Tailwind CSS binary not found.</exception>
-    public void EnsureBinaryExists()
+    /// <param name="versionArg">Optional version to download. Latest if not specified.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Path to the binary.</returns>
+    public async Task<string> EnsureDownloadedAsync(string? versionArg, CancellationToken cancellationToken)
     {
-        if (!File.Exists(BinaryFilePath))
+        var parsedVersion = ParseVersion(versionArg);
+        var binaryFileName = DetermineBinaryFileName();
+
+        // Create binaries directory if it does not exist.
+        Directory.CreateDirectory(BinariesDirectory);
+
+        // If a specific version is requested, check if it is already downloaded.
+        if (parsedVersion is not null)
         {
-            throw new BinaryNotFoundException("Tailwind CSS binary not found. Use the install command first.");
+            var existingBinaryPath = Path.Combine(BinariesDirectory, $"{parsedVersion}_{binaryFileName}");
+            if (File.Exists(existingBinaryPath))
+            {
+                _log.Exists(parsedVersion);
+                return existingBinaryPath;
+            }
         }
+
+        string binaryPath;
+        try
+        {
+            var releaseInfo = await GetGitHubReleaseInfoAsync(parsedVersion, cancellationToken);
+            binaryPath = Path.Combine(BinariesDirectory, $"{releaseInfo.Version}_{binaryFileName}");
+
+            if (parsedVersion is null)
+            {
+                _log.LatestVersion(releaseInfo.Version);
+
+                // Now that we know the latest version number, we can check if it exists.
+                // If it exists, don't download it.
+                if (File.Exists(binaryPath))
+                {
+                    _log.Exists(releaseInfo.Version);
+                    return binaryPath;
+                }
+            }
+
+            await DownloadAsync(
+                releaseInfo.Version,
+                releaseInfo.Assets.First(x => x.FileName == binaryFileName).DownloadUrl,
+                binaryPath,
+                cancellationToken);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is not HttpStatusCode.NotFound)
+        {
+            // If getting release info from GitHub failed for any reason other than a 404,
+            // attempt to use the latest installed binary if any exist for the current command.
+            var latestInstalledVersion = Directory
+                .GetFiles(BinariesDirectory, $"v*_{binaryFileName}", SearchOption.TopDirectoryOnly)
+                .Select(
+                    x =>
+                    {
+                        var fileName = Path.GetFileName(x);
+                        return SemanticVersion.Parse(fileName[1..fileName.IndexOf('_', StringComparison.Ordinal)]);
+                    })
+                .OrderDescending(VersionComparer.VersionRelease)
+                .FirstOrDefault();
+
+            // If no version is installed, rethrow.
+            if (latestInstalledVersion is null)
+            {
+                throw;
+            }
+
+            // Use the latest version installed.
+            var latestInstalledVersionString = $"v{latestInstalledVersion}";
+            _log.UsingLatestInstalledVersion(parsedVersion ?? "latest", latestInstalledVersionString);
+            binaryPath = Path.Combine(BinariesDirectory, $"{latestInstalledVersionString}_{binaryFileName}");
+        }
+
+        return binaryPath;
     }
 
     /// <summary>
-    /// Download the Tailwind CSS standalone CLI binary.
+    /// Download a specific version of the Tailwind CSS standalone CLI binary.
     /// </summary>
-    /// <param name="version">Optional version to download. Latest if not specified.</param>
-    /// <param name="overwrite">Whether to overwrite an existing download.</param>
+    /// <param name="version">Version of the binary to download.</param>
+    /// <param name="downloadUrl">Download URL of the binary.</param>
+    /// <param name="binaryPath">Path to save the binary to.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task DownloadAsync(string? version, bool overwrite, CancellationToken cancellationToken)
+    private async Task DownloadAsync(
+        string version,
+        Uri downloadUrl,
+        string binaryPath,
+        CancellationToken cancellationToken)
     {
-        ThrowIfInvalidVersion(version);
+        _log.Downloading(version, downloadUrl);
 
-        // Check if binary exists already.
-        if (File.Exists(BinaryFilePath))
-        {
-            _log.Exists();
+        using var httpClient = _httpClientFactory.CreateClient(HttpClientName);
+        var fileBytes = await httpClient.GetByteArrayAsync(downloadUrl, cancellationToken);
+        await File.WriteAllBytesAsync(binaryPath, fileBytes, cancellationToken);
+        _log.Success(version);
 
-            // Do not download if overwriting is not allowed.
-            if (!overwrite)
-            {
-                return;
-            }
-        }
-
-        Directory.CreateDirectory(Path.GetDirectoryName(BinaryFilePath)!);
-
-        var url = GetDownloadUrl(version);
-        _log.Downloading(url);
-
-        using var httpClient = new HttpClient();
-        try
-        {
-            var fileBytes = await httpClient.GetByteArrayAsync(url, cancellationToken);
-            await File.WriteAllBytesAsync(BinaryFilePath, fileBytes, cancellationToken);
-            _log.Success();
-        }
-        catch (HttpRequestException ex)
-        {
-            if (ex.StatusCode is HttpStatusCode.NotFound)
-            {
-                _log.NotFound(url);
-            }
-            else
-            {
-                _log.Failure(url);
-            }
-
-            throw;
-        }
-
-        // If the OS is Linux or MacOS, we need to make the binary executable in order to run it.
+        // If the OS is Linux or macOS, we need to make the binary executable in order to run it.
         if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
         {
-            using var chmodProcess = Process.Start("chmod", $"+x {BinaryFilePath}");
+            using var chmodProcess = Process.Start("chmod", $"+x {binaryPath}");
             await chmodProcess.WaitForExitAsync(cancellationToken);
         }
     }
@@ -146,51 +192,71 @@ internal sealed partial class BinaryManager
     }
 
     /// <summary>
-    /// Validate that the binary version requested is in a valid format or throw.
+    /// Parse a version argument value from a command.
+    /// Ensures that it is a semantic version and prepends a 'v' to match the tag name format of Tailwind CSS' releases.
     /// </summary>
-    /// <param name="version">The version requested. May be null for latest.</param>
-    /// <exception cref="ArgumentException">Invalid version string.</exception>
-    private static void ThrowIfInvalidVersion(string? version)
+    /// <param name="versionArg">The version argument value to parse.</param>
+    /// <returns>Parsed and formatted version.</returns>
+    private static string? ParseVersion(string? versionArg)
     {
-        if (string.IsNullOrWhiteSpace(version))
-        {
-            return;
-        }
-
+        return string.IsNullOrWhiteSpace(versionArg)
+            ? null
 #pragma warning disable CA1308
-        if (!version.Trim().ToLowerInvariant().StartsWith('v'))
+            : $"v{SemanticVersion.Parse(versionArg.TrimStart('v').ToLowerInvariant())}";
 #pragma warning restore CA1308
-        {
-            throw new ArgumentException("Invalid version. It must be in a format such as v4.0.0.", nameof(version));
-        }
     }
 
     /// <summary>
-    /// Get the full download URL for the Tailwind CSS standalone CLI binary.
+    /// Get the release info for a version of Tailwind CSS from GitHub.
     /// </summary>
-    /// <param name="version">The version to download. May be null for latest.</param>
-    /// <returns>Full download URL for the Tailwind CSS standalone CLI binary.</returns>
-    private Uri GetDownloadUrl(string? version)
+    /// <param name="parsedVersion">The parsed version. If null, gets the info for the latest version.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Release info for a version of Tailwind CSS from GitHub.</returns>
+    private async Task<GitHubReleaseInfo> GetGitHubReleaseInfoAsync(
+        string? parsedVersion,
+        CancellationToken cancellationToken)
     {
-        var gitHubPath = string.IsNullOrWhiteSpace(version) ? "latest/download" : $"download/{version}";
-        return new Uri(GitHubBaseUrl, $"{gitHubPath}/{_binaryFileName}");
+        var gitHubReleaseUrl = new Uri(
+            GitHubApiBaseUrl,
+            $"releases/{(parsedVersion is null ? "latest" : $"tags/{parsedVersion}")}");
+
+        using var httpClient = _httpClientFactory.CreateClient(HttpClientName);
+        var releaseInfo = await httpClient.GetFromJsonAsync<GitHubReleaseInfo>(gitHubReleaseUrl, cancellationToken);
+
+        return releaseInfo!;
     }
+
+    private sealed record GitHubReleaseAsset(
+        [property: JsonPropertyName("name")]
+        string FileName,
+        [property: JsonPropertyName("browser_download_url")]
+        Uri DownloadUrl);
+
+    private sealed record GitHubReleaseInfo(
+        [property: JsonPropertyName("tag_name")]
+        string Version,
+        [property: JsonPropertyName("assets")]
+        IReadOnlyList<GitHubReleaseAsset> Assets);
 
     private sealed partial class Log(ILogger logger)
     {
-        [LoggerMessage(Level = LogLevel.Information, Message = "A Tailwind CSS binary already exists.")]
-        public partial void Exists();
+        [LoggerMessage(Level = LogLevel.Information, Message = "The latest Tailwind CSS is {version}.")]
+        public partial void LatestVersion(string version);
 
-        [LoggerMessage(Level = LogLevel.Information, Message = "Downloading latest Tailwind CSS binary from: {url}")]
-        public partial void Downloading(Uri url);
+        [LoggerMessage(
+            Level = LogLevel.Information,
+            Message = "Tailwind CSS {version} already exists. Skipping download.")]
+        public partial void Exists(string version);
 
-        [LoggerMessage(Level = LogLevel.Error, Message = "Tailwind CSS binary was not found at: {url}")]
-        public partial void NotFound(Uri url);
+        [LoggerMessage(Level = LogLevel.Information, Message = "Downloading Tailwind CSS {version} from: {url}")]
+        public partial void Downloading(string version, Uri url);
 
-        [LoggerMessage(Level = LogLevel.Error, Message = "Failed to download Tailwind CSS binary from: {url}")]
-        public partial void Failure(Uri url);
+        [LoggerMessage(Level = LogLevel.Information, Message = "Successfully downloaded Tailwind CSS {version}.")]
+        public partial void Success(string version);
 
-        [LoggerMessage(Level = LogLevel.Information, Message = "Successfully downloaded the Tailwind CSS binary.")]
-        public partial void Success();
+        [LoggerMessage(
+            Level = LogLevel.Warning,
+            Message = "Failed to fetch Tailwind CSS ({attemptedVersion}). Using latest installed ({version}).")]
+        public partial void UsingLatestInstalledVersion(string attemptedVersion, string version);
     }
 }

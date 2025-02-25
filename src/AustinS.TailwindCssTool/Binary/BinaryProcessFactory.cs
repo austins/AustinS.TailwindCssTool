@@ -7,29 +7,31 @@ namespace AustinS.TailwindCssTool.Binary;
 /// </summary>
 internal sealed class BinaryProcessFactory
 {
-    private readonly BinaryManager _binaryManager;
     private readonly ILoggerFactory _loggerFactory;
 
-    public BinaryProcessFactory(BinaryManager binaryManager, ILoggerFactory loggerFactory)
+    public BinaryProcessFactory(ILoggerFactory loggerFactory)
     {
-        _binaryManager = binaryManager;
         _loggerFactory = loggerFactory;
     }
 
     /// <summary>
     /// Create a process of the Tailwind CSS standalone CLI binary.
     /// </summary>
+    /// <param name="binaryFilePath">Path to the binary file.</param>
     /// <param name="input">The input CSS file path.</param>
     /// <param name="output">The output CSS file path.</param>
     /// <param name="minify">Whether to minify the output CSS.</param>
     /// <param name="watch">Whether to watch for changes and generate Tailwind CSS output on any change.</param>
     /// <returns>New binary process.</returns>
-    public BinaryProcess Create(string input, string output, bool minify = false, bool watch = false)
+    public BinaryProcess Create(
+        string binaryFilePath,
+        string input,
+        string output,
+        bool minify = false,
+        bool watch = false)
     {
-        _binaryManager.EnsureBinaryExists();
-
         return new BinaryProcess(
-            _binaryManager.BinaryFilePath,
+            binaryFilePath,
             input,
             output,
             _loggerFactory.CreateLogger<BinaryProcess>(),
