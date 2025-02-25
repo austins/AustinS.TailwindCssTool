@@ -22,6 +22,8 @@ You can use `dotnet tool run tailwindcss` or the shorthand `dotnet tailwindcss`.
     - (Optional) `-m` or `--minify` Whether to minify the output CSS.
     - (Optional) `-t` or `--tailwind-version` The version of Tailwind CSS to install (e.g. v4.0.0, v3.4.17). If not specified, the latest is installed.
 
+If the latest or specified Tailwind CSS version is already installed on the system, it will be used. If there are any failures fetching a version, the latest installed version, if any, will be used. 
+
 ### Input CSS File for Tailwind CSS
 For Tailwind CSS v4+, you can create a CSS file containing the following in your web project:
 ```css
