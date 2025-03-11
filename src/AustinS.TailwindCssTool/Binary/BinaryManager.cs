@@ -15,6 +15,9 @@ namespace AustinS.TailwindCssTool.Binary;
 internal sealed partial class BinaryManager
 {
     public const string HttpClientName = nameof(BinaryManager);
+    private const string GitHubOwnerName = "tailwindlabs";
+    private const string GitHubRepoName = "tailwindcss";
+    private readonly string _binaryFileName;
 
     /// <summary>
     /// The path to the binaries directory that resides next to the app.
@@ -26,7 +29,13 @@ internal sealed partial class BinaryManager
     /// <summary>
     /// The base URL for the GitHub API. Must end with a trailing slash.
     /// </summary>
-    private static readonly Uri GitHubApiBaseUrl = new("https://api.github.com/repos/tailwindlabs/tailwindcss/");
+    private static readonly Uri GitHubApiBaseUrl =
+        new($"https://api.github.com/repos/{GitHubOwnerName}/{GitHubRepoName}/");
+
+    /// <summary>
+    /// The base URL for the repo on GitHub. Must end with a trailing slash.
+    /// </summary>
+    private static readonly Uri GitHubBaseUrl = new($"https://github.com/{GitHubOwnerName}/{GitHubRepoName}/");
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly Log _log;
@@ -35,6 +44,7 @@ internal sealed partial class BinaryManager
     {
         _httpClientFactory = httpClientFactory;
         _log = new Log(logger);
+        _binaryFileName = DetermineBinaryFileName();
     }
 
     /// <summary>
@@ -46,7 +56,6 @@ internal sealed partial class BinaryManager
     public async Task<string> EnsureDownloadedAsync(string? versionArg, CancellationToken cancellationToken)
     {
         var parsedVersion = ParseVersion(versionArg);
-        var binaryFileName = DetermineBinaryFileName();
 
         // Create binaries directory if it does not exist.
         Directory.CreateDirectory(BinariesDirectory);
@@ -54,7 +63,7 @@ internal sealed partial class BinaryManager
         // If a specific version is requested, check if it is already downloaded.
         if (parsedVersion is not null)
         {
-            var existingBinaryPath = Path.Combine(BinariesDirectory, $"{parsedVersion}_{binaryFileName}");
+            var existingBinaryPath = Path.Combine(BinariesDirectory, $"{parsedVersion}_{_binaryFileName}");
             if (File.Exists(existingBinaryPath))
             {
                 _log.Exists(parsedVersion);
@@ -66,7 +75,7 @@ internal sealed partial class BinaryManager
         try
         {
             var releaseInfo = await GetGitHubReleaseInfoAsync(parsedVersion, cancellationToken);
-            binaryPath = Path.Combine(BinariesDirectory, $"{releaseInfo.Version}_{binaryFileName}");
+            binaryPath = Path.Combine(BinariesDirectory, $"{releaseInfo.Version}_{_binaryFileName}");
 
             if (parsedVersion is null)
             {
@@ -83,7 +92,7 @@ internal sealed partial class BinaryManager
 
             await DownloadAsync(
                 releaseInfo.Version,
-                releaseInfo.Assets.First(x => x.FileName == binaryFileName).DownloadUrl,
+                releaseInfo.Assets.First(x => x.FileName == _binaryFileName).DownloadUrl,
                 binaryPath,
                 cancellationToken);
         }
@@ -92,7 +101,7 @@ internal sealed partial class BinaryManager
             // If getting release info from GitHub failed for any reason other than a 404,
             // attempt to use the latest installed binary if any exist for the current command.
             var latestInstalledVersion = Directory
-                .GetFiles(BinariesDirectory, $"v*_{binaryFileName}", SearchOption.TopDirectoryOnly)
+                .GetFiles(BinariesDirectory, $"v*_{_binaryFileName}", SearchOption.TopDirectoryOnly)
                 .Select(
                     x =>
                     {
@@ -111,38 +120,26 @@ internal sealed partial class BinaryManager
             // Use the latest version installed.
             var latestInstalledVersionString = $"v{latestInstalledVersion}";
             _log.UsingLatestInstalledVersion(parsedVersion ?? "latest", latestInstalledVersionString);
-            binaryPath = Path.Combine(BinariesDirectory, $"{latestInstalledVersionString}_{binaryFileName}");
+            binaryPath = Path.Combine(BinariesDirectory, $"{latestInstalledVersionString}_{_binaryFileName}");
         }
 
         return binaryPath;
     }
 
     /// <summary>
-    /// Download a specific version of the Tailwind CSS standalone CLI binary.
+    /// Parse a version argument value from a command.
+    /// Ensures that it is a semantic version and prepends a 'v' to match the tag name format of Tailwind CSS' releases.
     /// </summary>
-    /// <param name="version">Version of the binary to download.</param>
-    /// <param name="downloadUrl">Download URL of the binary.</param>
-    /// <param name="binaryPath">Path to save the binary to.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    private async Task DownloadAsync(
-        string version,
-        Uri downloadUrl,
-        string binaryPath,
-        CancellationToken cancellationToken)
+    /// <param name="versionArg">The version argument value to parse.</param>
+    /// <returns>Parsed and formatted version.</returns>
+    /// <exception cref="ArgumentException">Invalid semantic version.</exception>
+    private static string? ParseVersion(string? versionArg)
     {
-        _log.Downloading(version, downloadUrl);
-
-        using var httpClient = _httpClientFactory.CreateClient(HttpClientName);
-        var fileBytes = await httpClient.GetByteArrayAsync(downloadUrl, cancellationToken);
-        await File.WriteAllBytesAsync(binaryPath, fileBytes, cancellationToken);
-        _log.Success(version);
-
-        // If the OS is Linux or macOS, we need to make the binary executable in order to run it.
-        if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
-        {
-            using var chmodProcess = Process.Start("chmod", $"+x {binaryPath}");
-            await chmodProcess.WaitForExitAsync(cancellationToken);
-        }
+        return string.IsNullOrWhiteSpace(versionArg)
+            ? null
+#pragma warning disable CA1308
+            : $"v{SemanticVersion.Parse(versionArg.TrimStart('v').ToLowerInvariant())}";
+#pragma warning restore CA1308
     }
 
     /// <summary>
@@ -192,18 +189,34 @@ internal sealed partial class BinaryManager
     }
 
     /// <summary>
-    /// Parse a version argument value from a command.
-    /// Ensures that it is a semantic version and prepends a 'v' to match the tag name format of Tailwind CSS' releases.
+    /// Download a specific version of the Tailwind CSS standalone CLI binary.
     /// </summary>
-    /// <param name="versionArg">The version argument value to parse.</param>
-    /// <returns>Parsed and formatted version.</returns>
-    private static string? ParseVersion(string? versionArg)
+    /// <param name="version">Version of the binary to download.</param>
+    /// <param name="downloadUrl">Download URL of the binary.</param>
+    /// <param name="binaryPath">Path to save the binary to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    private async Task DownloadAsync(
+        string version,
+        Uri downloadUrl,
+        string binaryPath,
+        CancellationToken cancellationToken)
     {
-        return string.IsNullOrWhiteSpace(versionArg)
-            ? null
-#pragma warning disable CA1308
-            : $"v{SemanticVersion.Parse(versionArg.TrimStart('v').ToLowerInvariant())}";
-#pragma warning restore CA1308
+        _log.Downloading(version, downloadUrl);
+
+        using var httpClient = _httpClientFactory.CreateClient(HttpClientName);
+        using var downloadResponse = await httpClient.GetAsync(downloadUrl, cancellationToken);
+        downloadResponse.EnsureSuccessStatusCode();
+
+        var fileBytes = await downloadResponse.Content.ReadAsByteArrayAsync(cancellationToken);
+        await File.WriteAllBytesAsync(binaryPath, fileBytes, cancellationToken);
+        _log.Success(version);
+
+        // If the OS is Linux or macOS, we need to make the binary executable in order to run it.
+        if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+        {
+            using var chmodProcess = Process.Start("chmod", $"+x {binaryPath}");
+            await chmodProcess.WaitForExitAsync(cancellationToken);
+        }
     }
 
     /// <summary>
@@ -216,14 +229,68 @@ internal sealed partial class BinaryManager
         string? parsedVersion,
         CancellationToken cancellationToken)
     {
-        var gitHubReleaseUrl = new Uri(
-            GitHubApiBaseUrl,
-            $"releases/{(parsedVersion is null ? "latest" : $"tags/{parsedVersion}")}");
-
         using var httpClient = _httpClientFactory.CreateClient(HttpClientName);
-        var releaseInfo = await httpClient.GetFromJsonAsync<GitHubReleaseInfo>(gitHubReleaseUrl, cancellationToken);
 
-        return releaseInfo!;
+        GitHubReleaseInfo releaseInfo;
+        try
+        {
+            // Try to get info about the release from the GitHub API.
+            // The API is more reliable than checking URLs as the direct URLs can change at any time.
+            using var releaseResponse = await httpClient.GetAsync(
+                new Uri(GitHubApiBaseUrl, $"releases/{(parsedVersion is null ? "latest" : $"tags/{parsedVersion}")}"),
+                cancellationToken);
+
+            releaseResponse.EnsureSuccessStatusCode();
+
+            releaseInfo = (await releaseResponse.Content.ReadFromJsonAsync<GitHubReleaseInfo>(cancellationToken))!;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden
+                                                  or HttpStatusCode.TooManyRequests)
+        {
+            // The GitHub API rate limit might have been reached if a 403 or 429 was returned. See: https://docs.github.com/en/rest/using-the-rest-api/troubleshooting-the-rest-api?apiVersion=2022-11-28#rate-limit-errors
+            // The rate limit is 60 requests per hour for unauthenticated requests. See: https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api?apiVersion=2022-11-28#primary-rate-limit-for-unauthenticated-users
+            // Try to check if the version exists using direct URLs and build a download URL.
+            _log.ReachedGitHubRateLimit();
+
+            var checkedVersionExists = false;
+            if (parsedVersion is null)
+            {
+                // Try to get latest version number if version is specified.
+                using var latestReleaseResponse = await httpClient.GetAsync(
+                    new Uri(GitHubBaseUrl, "releases/latest"),
+                    cancellationToken);
+
+                var segments = latestReleaseResponse.RequestMessage?.RequestUri?.Segments;
+                if (segments is null || segments[^2] != "tag/")
+                {
+                    // Resulting URL is not in the expected format.
+                    throw;
+                }
+
+                parsedVersion = ParseVersion(segments[^1]);
+                checkedVersionExists = true;
+            }
+
+            if (!checkedVersionExists)
+            {
+                // Ensure that the version exists.
+                using var releaseResponse = await httpClient.GetAsync(
+                    new Uri(GitHubBaseUrl, $"releases/tag/{parsedVersion}"),
+                    cancellationToken);
+
+                releaseResponse.EnsureSuccessStatusCode();
+            }
+
+            releaseInfo = new GitHubReleaseInfo(
+                parsedVersion!,
+                [
+                    new GitHubReleaseAsset(
+                        _binaryFileName,
+                        new Uri(GitHubBaseUrl, $"releases/download/{parsedVersion}/{_binaryFileName}"))
+                ]);
+        }
+
+        return releaseInfo;
     }
 
     private sealed record GitHubReleaseAsset(
@@ -240,6 +307,11 @@ internal sealed partial class BinaryManager
 
     private sealed partial class Log(ILogger logger)
     {
+        [LoggerMessage(
+            Level = LogLevel.Warning,
+            Message = "Reached GitHub API rate limit. Starting attempt to get release info from direct URLs.")]
+        public partial void ReachedGitHubRateLimit();
+
         [LoggerMessage(Level = LogLevel.Information, Message = "The latest Tailwind CSS is {version}.")]
         public partial void LatestVersion(string version);
 
