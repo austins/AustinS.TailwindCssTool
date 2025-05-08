@@ -3,6 +3,7 @@
     "extends": [
         "config:recommended",
         "schedule:daily",
+        ":configMigration",
         ":enableVulnerabilityAlerts",
         ":rebaseStalePrs",
         ":automergePr",
