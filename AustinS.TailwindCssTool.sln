@@ -33,6 +33,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "setup-dotnet-environment", 
 		.github\actions\setup-dotnet-environment\action.yml = .github\actions\setup-dotnet-environment\action.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AustinS.TailwindCssTool.ExampleWebApp", "src\AustinS.TailwindCssTool.ExampleWebApp\AustinS.TailwindCssTool.ExampleWebApp.csproj", "{97E29780-EA93-4EDF-8469-A8108CBF5809}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,10 @@ Global
 		{E7B87320-3F57-4ADD-8DE3-329F277F78E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7B87320-3F57-4ADD-8DE3-329F277F78E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7B87320-3F57-4ADD-8DE3-329F277F78E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97E29780-EA93-4EDF-8469-A8108CBF5809}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97E29780-EA93-4EDF-8469-A8108CBF5809}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97E29780-EA93-4EDF-8469-A8108CBF5809}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97E29780-EA93-4EDF-8469-A8108CBF5809}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E7B87320-3F57-4ADD-8DE3-329F277F78E8} = {49994079-1098-4BC5-A9F3-A711DFE6E024}
@@ -50,5 +56,6 @@ Global
 		{B254A8E7-1CED-4A6B-B875-70ED320D8C5F} = {709C01A0-B9E4-486D-91F3-38BA0558F562}
 		{7B808E67-85F7-42E1-B16D-636F25A0FE16} = {709C01A0-B9E4-486D-91F3-38BA0558F562}
 		{C8491AC7-DADA-410B-AC97-96F8E0811C91} = {7B808E67-85F7-42E1-B16D-636F25A0FE16}
+		{97E29780-EA93-4EDF-8469-A8108CBF5809} = {49994079-1098-4BC5-A9F3-A711DFE6E024}
 	EndGlobalSection
 EndGlobal

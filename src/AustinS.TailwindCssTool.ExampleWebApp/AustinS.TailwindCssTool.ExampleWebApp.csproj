@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <TailwindCssVersion>v4.1.10</TailwindCssVersion>
+        <TailwindCssInputFilePath>tailwind.css</TailwindCssInputFilePath>
+        <TailwindCssOutputFilePath>wwwroot/app.css</TailwindCssOutputFilePath>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Build" Version="17.14.8" Condition="'$(Configuration)' == 'Debug'"/>
+    </ItemGroup>
+
+    <Target Name="RestoreAssets" AfterTargets="BeforeBuild">
+        <Exec Command="dotnet tool restore"/>
+        <Exec Command="dotnet tool run tailwindcss build -t $(TailwindCssVersion) -m -i $(TailwindCssInputFilePath) -o $(TailwindCssOutputFilePath)"/>
+    </Target>
+
+    <Target Name="CleanAssets" AfterTargets="Clean">
+        <Delete Files="wwwroot\app.css"/>
+        <RemoveDir Directories="wwwroot\vendors"/>
+    </Target>
+</Project>

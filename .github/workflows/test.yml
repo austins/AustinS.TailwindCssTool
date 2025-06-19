@@ -11,6 +11,6 @@ jobs:
                 uses: actions/checkout@v4
             -   uses: ./.github/actions/setup-dotnet-environment
             -   name: Build for .NET 8
-                run: dotnet build --framework net8.0 -c Release
+                run: dotnet build ./src/AustinS.TailwindCssTool --framework net8.0 -c Release
             -   name: Build for .NET 9
-                run: dotnet build --framework net9.0 -c Release
+                run: dotnet build ./src/AustinS.TailwindCssTool --framework net9.0 -c Release
