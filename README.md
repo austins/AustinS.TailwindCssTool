@@ -42,3 +42,7 @@ Here is an example target you can place in your web project's csproj file to run
 ```
 
 It is recommended to set the Tailwind CSS version so that builds will be consistent across environments and not commit the output file (instead, have that generated during CI). Be sure to change the input and output paths. See [the Tailwind CSS repo](https://github.com/tailwindlabs/tailwindcss/releases/latest) to find out the latest standalone CLI version number.
+
+### Development Watcher
+
+See the [ExampleWebApp](https://github.com/austins/AustinS.TailwindCssTool/tree/main/src/AustinS.TailwindCssTool.ExampleWebApp) in the repository for an example of how to create a background service that uses the tool to watch for style changes during development.
