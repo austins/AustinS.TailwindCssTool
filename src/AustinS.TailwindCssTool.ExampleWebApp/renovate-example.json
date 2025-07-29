@@ -1,0 +1,29 @@
+﻿{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended",
+        "schedule:daily",
+        "npm:unpublishSafe",
+        ":configMigration",
+        ":enableVulnerabilityAlerts",
+        ":rebaseStalePrs",
+        ":automergePr",
+        ":automergeRequireAllStatusChecks",
+        ":automergeMinor",
+        ":automergeDigest"
+    ],
+    "customManagers": [
+        {
+            "customType": "regex",
+            "managerFilePatterns": [
+                "/(^|/)AustinS\\.TailwindCssTool\\.ExampleWebApp\\.csproj$/"
+            ],
+            "datasourceTemplate": "npm",
+            "versioningTemplate": "npm",
+            "depNameTemplate": "@tailwindcss/cli",
+            "matchStrings": [
+                "<TailwindCssVersion>v?(?<currentValue>.*?)</TailwindCssVersion>"
+            ]
+        }
+    ]
+}
