@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
-        <TailwindCssVersion>v4.1.10</TailwindCssVersion>
+        <TailwindCssVersion>v4.1.12</TailwindCssVersion>
         <TailwindCssInputFilePath>tailwind.css</TailwindCssInputFilePath>
-        <TailwindCssOutputFilePath>wwwroot/app.css</TailwindCssOutputFilePath>
+        <TailwindCssOutputFilePath>wwwroot\app.css</TailwindCssOutputFilePath>
     </PropertyGroup>
 
     <ItemGroup>
