@@ -21,6 +21,7 @@ You can use `dotnet tool run tailwindcss` or the shorthand `dotnet tailwindcss`.
     - `-o` or `--output` The output CSS file path.
     - (Optional) `-m` or `--minify` Whether to minify the output CSS.
     - (Optional) `-t` or `--tailwind-version` The version of Tailwind CSS to install (e.g. v4.0.0, v3.4.17). If not specified, the latest is installed.
+- `dotnet tailwindcss clean` Clean downloaded Tailwind CSS binaries.
 
 If the latest or specified Tailwind CSS version is already installed on the system, it will be used. If there are any failures fetching a version, the latest installed version, if any, will be used. 
 
@@ -37,7 +38,7 @@ Here is an example target you can place in your web project's csproj file to run
 ```
 <Target Name="GenerateTailwindCss" AfterTargets="BeforeBuild">
     <Exec Command="dotnet tool restore"/>
-    <Exec Command="dotnet tool run tailwindcss build -t v4.0.8 -m -i <PATH TO YOUR TAILWIND CSS FILE> -o <PATH THE OUTPUT CSS FILE WILL SAVE TO>"/>
+    <Exec Command="dotnet tool run tailwindcss build -t v4.1.18 -m -i <PATH TO YOUR TAILWIND CSS FILE> -o <PATH THE OUTPUT CSS FILE WILL SAVE TO>"/>
 </Target>
 ```
 

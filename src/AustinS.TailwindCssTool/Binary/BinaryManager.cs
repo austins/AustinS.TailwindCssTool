@@ -102,12 +102,11 @@ internal sealed partial class BinaryManager
             // attempt to use the latest installed binary if any exist for the current command.
             var latestInstalledVersion = Directory
                 .GetFiles(BinariesDirectory, $"v*_{_binaryFileName}", SearchOption.TopDirectoryOnly)
-                .Select(
-                    x =>
-                    {
-                        var fileName = Path.GetFileName(x);
-                        return SemanticVersion.Parse(fileName[1..fileName.IndexOf('_', StringComparison.Ordinal)]);
-                    })
+                .Select(x =>
+                {
+                    var fileName = Path.GetFileName(x);
+                    return SemanticVersion.Parse(fileName[1..fileName.IndexOf('_', StringComparison.Ordinal)]);
+                })
                 .OrderDescending(VersionComparer.VersionRelease)
                 .FirstOrDefault();
 
@@ -124,6 +123,54 @@ internal sealed partial class BinaryManager
         }
 
         return binaryPath;
+    }
+
+    /// <summary>
+    /// Deletes all Tailwind CSS binaries in <see cref="BinariesDirectory"/>.
+    /// </summary>
+    public void CleanDownloads()
+    {
+        if (!Directory.Exists(BinariesDirectory))
+        {
+            _log.NoBinariesToDelete();
+            return;
+        }
+
+        // Make sure we're only deleting files for the binaries.
+        // Keep them sorted by version for the output.
+        var binaries = new SortedDictionary<SemanticVersion, string>(VersionComparer.VersionRelease);
+        foreach (var binaryPath in Directory.EnumerateFiles(
+                     BinariesDirectory,
+                     "v*_tailwindcss*",
+                     SearchOption.TopDirectoryOnly))
+        {
+            var fileName = Path.GetFileName(binaryPath);
+            if (SemanticVersion.TryParse(fileName[1..fileName.IndexOf('_', StringComparison.Ordinal)], out var version))
+            {
+                binaries.Add(version, binaryPath);
+            }
+        }
+
+        if (binaries.Count == 0)
+        {
+            _log.NoBinariesToDelete();
+            return;
+        }
+
+        foreach (var (version, binaryPath) in binaries)
+        {
+            var formattedVersionString = $"v{version}";
+
+            try
+            {
+                File.Delete(binaryPath);
+                _log.DeletedBinary(formattedVersionString);
+            }
+            catch (Exception ex)
+            {
+                _log.FailedToDeleteBinary(ex, formattedVersionString);
+            }
+        }
     }
 
     /// <summary>
@@ -330,5 +377,14 @@ internal sealed partial class BinaryManager
             Level = LogLevel.Warning,
             Message = "Failed to fetch Tailwind CSS ({attemptedVersion}). Using latest installed ({version}).")]
         public partial void UsingLatestInstalledVersion(string attemptedVersion, string version);
+
+        [LoggerMessage(Level = LogLevel.Information, Message = "No Tailwind CSS binaries to delete.")]
+        public partial void NoBinariesToDelete();
+
+        [LoggerMessage(Level = LogLevel.Information, Message = "Deleted Tailwind CSS {version}.")]
+        public partial void DeletedBinary(string version);
+
+        [LoggerMessage(Level = LogLevel.Error, Message = "Failed to delete Tailwind CSS {version}.")]
+        public partial void FailedToDeleteBinary(Exception ex, string version);
     }
 }
