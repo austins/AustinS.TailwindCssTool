@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Build" Version="18.0.2" Condition="'$(Configuration)' == 'Debug'"/>
+        <PackageReference Include="Microsoft.Build" Version="18.3.3" Condition="'$(Configuration)' == 'Debug'"/>
     </ItemGroup>
 
     <Target Name="RestoreAssets" AfterTargets="BeforeBuild">
