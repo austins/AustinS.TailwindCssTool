@@ -3,7 +3,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <TailwindCssVersion>v4.1.18</TailwindCssVersion>
         <TailwindCssInputFilePath>tailwind.css</TailwindCssInputFilePath>
-        <TailwindCssOutputFilePath>wwwroot\app.css</TailwindCssOutputFilePath>
+        <TailwindCssOutputFilePath>wwwroot/app.css</TailwindCssOutputFilePath>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,7 +12,7 @@
 
     <Target Name="RestoreAssets" AfterTargets="BeforeBuild">
         <Exec Command="dotnet tool restore"/>
-        <Exec Command="dotnet tool run tailwindcss build -t $(TailwindCssVersion) -m -i $(TailwindCssInputFilePath) -o $(TailwindCssOutputFilePath)"/>
+        <Exec Command="dotnet tool run tailwindcss build -t $(TailwindCssVersion) -m -i &quot;$(TailwindCssInputFilePath)&quot; -o &quot;$(TailwindCssOutputFilePath)&quot;"/>
     </Target>
 
     <Target Name="CleanAssets" AfterTargets="Clean">
