@@ -9,5 +9,13 @@
         ":automergePr",
         ":automergeRequireAllStatusChecks",
         ":automergeMinor"
+    ],
+    "packageRules": [
+        {
+            "matchDatasources": [
+                "nuget"
+            ],
+            "minimumReleaseAge": "3 days"
+        }
     ]
 }
