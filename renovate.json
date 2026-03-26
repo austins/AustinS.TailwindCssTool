@@ -2,17 +2,22 @@
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "extends": [
         "config:recommended",
+        "helpers:githubDigestChangelogs",
+        "helpers:pinGitHubActionDigestsToSemver",
         "schedule:daily",
         ":configMigration",
         ":enableVulnerabilityAlerts",
         ":rebaseStalePrs",
         ":automergePr",
         ":automergeRequireAllStatusChecks",
-        ":automergeMinor"
+        ":automergeMinor",
+        ":automergeDigest"
     ],
     "packageRules": [
         {
             "matchDatasources": [
+                "github-digest",
+                "github-tags",
                 "nuget"
             ],
             "minimumReleaseAge": "3 days"

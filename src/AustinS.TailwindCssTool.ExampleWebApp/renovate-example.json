@@ -3,7 +3,7 @@
     "extends": [
         "config:recommended",
         "schedule:daily",
-        "npm:unpublishSafe",
+        "security:minimumReleaseAgeNpm",
         ":configMigration",
         ":enableVulnerabilityAlerts",
         ":rebaseStalePrs",
