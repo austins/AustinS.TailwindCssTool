@@ -3,13 +3,11 @@ using System.Diagnostics;
 
 namespace AustinS.TailwindCssTool.Binary;
 
-/// <summary>
-/// A process of the Tailwind CSS standalone CLI binary.
-/// </summary>
-internal sealed partial class BinaryProcess : IDisposable
+internal sealed partial class BinaryProcess : IBinaryProcess
 {
     private readonly Log _log;
     private readonly Process _process;
+    private bool _isStarted;
 
     public BinaryProcess(
         string binaryFilePath,
@@ -50,33 +48,32 @@ internal sealed partial class BinaryProcess : IDisposable
         _process.ErrorDataReceived += LogOutput;
     }
 
-    /// <summary>
-    /// Start the process.
-    /// </summary>
     public void Start()
     {
-        _process.Start();
-        _process.BeginOutputReadLine();
-        _process.BeginErrorReadLine();
+        if (!_isStarted)
+        {
+            _process.Start();
+            _isStarted = true;
+
+            _process.BeginOutputReadLine();
+            _process.BeginErrorReadLine();
+        }
     }
 
-    /// <summary>
-    /// Wait for the process to exit gracefully or a cancellation is requested, then dispose of the process.
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    public Task WaitForExitAsync(CancellationToken cancellationToken)
+    public async Task WaitForExitAsync(CancellationToken cancellationToken)
     {
-        return _process.WaitForExitAsync(cancellationToken);
+        if (_isStarted)
+        {
+            await _process.WaitForExitAsync(cancellationToken);
+        }
     }
 
-    /// <summary>
-    /// Dispose of the process instance if it exists.
-    /// </summary>
     public void Dispose()
     {
-        if (!_process.HasExited)
+        if (_isStarted && !_process.HasExited)
         {
             _process.Kill();
+            _isStarted = false;
         }
 
         _process.Dispose();
@@ -95,4 +92,21 @@ internal sealed partial class BinaryProcess : IDisposable
         [LoggerMessage(Level = LogLevel.Information, Message = "Tailwind CSS: {output}")]
         public partial void Output(string output);
     }
+}
+
+/// <summary>
+/// A process of the Tailwind CSS standalone CLI binary.
+/// </summary>
+internal interface IBinaryProcess : IDisposable
+{
+    /// <summary>
+    /// Start the process.
+    /// </summary>
+    public void Start();
+
+    /// <summary>
+    /// Wait for the process to exit gracefully or a cancellation is requested, then dispose of the process.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public Task WaitForExitAsync(CancellationToken cancellationToken);
 }

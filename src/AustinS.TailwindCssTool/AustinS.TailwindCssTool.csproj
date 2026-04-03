@@ -18,9 +18,15 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.5" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.5" />
-        <PackageReference Include="NuGet.Versioning" Version="7.3.0" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.5"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.5"/>
+        <PackageReference Include="NuGet.Versioning" Version="7.3.0"/>
+        <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.1.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="DynamicProxyGenAssembly2"/>
+        <InternalsVisibleTo Include="$(AssemblyName).Tests.Unit"/>
     </ItemGroup>
 
     <ItemGroup>

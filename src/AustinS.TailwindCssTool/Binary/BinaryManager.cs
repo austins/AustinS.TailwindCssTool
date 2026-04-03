@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using NuGet.Versioning;
 using System.Diagnostics;
+using System.IO.Abstractions;
 using System.Net;
 using System.Net.Http.Json;
 using System.Runtime.InteropServices;
@@ -9,62 +10,46 @@ using System.Text.Json.Serialization;
 
 namespace AustinS.TailwindCssTool.Binary;
 
-/// <summary>
-/// Manages the binary for the Tailwind CSS standalone CLI.
-/// </summary>
-internal sealed partial class BinaryManager
+internal sealed partial class BinaryManager : IBinaryManager
 {
     public const string HttpClientName = nameof(BinaryManager);
     private const string GitHubOwnerName = "tailwindlabs";
     private const string GitHubRepoName = "tailwindcss";
-    private readonly string _binaryFileName;
 
-    /// <summary>
-    /// The path to the binaries directory that resides next to the app.
-    /// </summary>
-    private static readonly string BinariesDirectory = Path.Combine(
+    public string BinariesDirectory { get; } = Path.Combine(
         Path.GetDirectoryName(AppContext.BaseDirectory)!,
         "binaries");
 
-    /// <summary>
-    /// The base URL for the GitHub API. Must end with a trailing slash.
-    /// </summary>
-    private static readonly Uri GitHubApiBaseUrl =
-        new($"https://api.github.com/repos/{GitHubOwnerName}/{GitHubRepoName}/");
+    public string BinaryFileName { get; }
 
-    /// <summary>
-    /// The base URL for the repo on GitHub. Must end with a trailing slash.
-    /// </summary>
-    private static readonly Uri GitHubBaseUrl = new($"https://github.com/{GitHubOwnerName}/{GitHubRepoName}/");
+    public Uri GitHubApiBaseUrl { get; } = new($"https://api.github.com/repos/{GitHubOwnerName}/{GitHubRepoName}/");
 
+    public Uri GitHubBaseUrl { get; } = new($"https://github.com/{GitHubOwnerName}/{GitHubRepoName}/");
+
+    private readonly IFileSystem _fileSystem;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly Log _log;
 
-    public BinaryManager(IHttpClientFactory httpClientFactory, ILogger<BinaryManager> logger)
+    public BinaryManager(IFileSystem fileSystem, IHttpClientFactory httpClientFactory, ILogger<BinaryManager> logger)
     {
+        _fileSystem = fileSystem;
         _httpClientFactory = httpClientFactory;
         _log = new Log(logger);
-        _binaryFileName = DetermineBinaryFileName();
+        BinaryFileName = DetermineBinaryFileName();
     }
 
-    /// <summary>
-    /// Ensures that the requested Tailwind CSS standalone CLI binary is downloaded.
-    /// </summary>
-    /// <param name="versionArg">Optional version to download. Latest if not specified.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Path to the binary.</returns>
     public async Task<string> EnsureDownloadedAsync(string? versionArg, CancellationToken cancellationToken)
     {
         var parsedVersion = ParseVersion(versionArg);
 
         // Create binaries directory if it does not exist.
-        Directory.CreateDirectory(BinariesDirectory);
+        _fileSystem.Directory.CreateDirectory(BinariesDirectory);
 
         // If a specific version is requested, check if it is already downloaded.
         if (parsedVersion is not null)
         {
-            var existingBinaryPath = Path.Combine(BinariesDirectory, $"{parsedVersion}_{_binaryFileName}");
-            if (File.Exists(existingBinaryPath))
+            var existingBinaryPath = Path.Combine(BinariesDirectory, $"{parsedVersion}_{BinaryFileName}");
+            if (_fileSystem.File.Exists(existingBinaryPath))
             {
                 _log.Exists(parsedVersion);
                 return existingBinaryPath;
@@ -75,7 +60,7 @@ internal sealed partial class BinaryManager
         try
         {
             var releaseInfo = await GetGitHubReleaseInfoAsync(parsedVersion, cancellationToken);
-            binaryPath = Path.Combine(BinariesDirectory, $"{releaseInfo.Version}_{_binaryFileName}");
+            binaryPath = Path.Combine(BinariesDirectory, $"{releaseInfo.Version}_{BinaryFileName}");
 
             if (parsedVersion is null)
             {
@@ -83,7 +68,7 @@ internal sealed partial class BinaryManager
 
                 // Now that we know the latest version number, we can check if it exists.
                 // If it exists, don't download it.
-                if (File.Exists(binaryPath))
+                if (_fileSystem.File.Exists(binaryPath))
                 {
                     _log.Exists(releaseInfo.Version);
                     return binaryPath;
@@ -92,7 +77,7 @@ internal sealed partial class BinaryManager
 
             await DownloadAsync(
                 releaseInfo.Version,
-                releaseInfo.Assets.First(x => x.FileName == _binaryFileName).DownloadUrl,
+                releaseInfo.Assets.First(x => x.FileName == BinaryFileName).DownloadUrl,
                 binaryPath,
                 cancellationToken);
         }
@@ -100,8 +85,8 @@ internal sealed partial class BinaryManager
         {
             // If getting release info from GitHub failed for any reason other than a 404,
             // attempt to use the latest installed binary if any exist for the current command.
-            var latestInstalledVersion = Directory
-                .GetFiles(BinariesDirectory, $"v*_{_binaryFileName}", SearchOption.TopDirectoryOnly)
+            var latestInstalledVersion = _fileSystem
+                .Directory.GetFiles(BinariesDirectory, $"v*_{BinaryFileName}", SearchOption.TopDirectoryOnly)
                 .Select(x =>
                 {
                     var fileName = Path.GetFileName(x);
@@ -119,18 +104,15 @@ internal sealed partial class BinaryManager
             // Use the latest version installed.
             var latestInstalledVersionString = $"v{latestInstalledVersion}";
             _log.UsingLatestInstalledVersion(parsedVersion ?? "latest", latestInstalledVersionString);
-            binaryPath = Path.Combine(BinariesDirectory, $"{latestInstalledVersionString}_{_binaryFileName}");
+            binaryPath = Path.Combine(BinariesDirectory, $"{latestInstalledVersionString}_{BinaryFileName}");
         }
 
         return binaryPath;
     }
 
-    /// <summary>
-    /// Deletes all Tailwind CSS binaries in <see cref="BinariesDirectory"/>.
-    /// </summary>
     public void CleanDownloads()
     {
-        if (!Directory.Exists(BinariesDirectory))
+        if (!_fileSystem.Directory.Exists(BinariesDirectory))
         {
             _log.NoBinariesToDelete();
             return;
@@ -139,7 +121,7 @@ internal sealed partial class BinaryManager
         // Make sure we're only deleting files for the binaries.
         // Keep them sorted by version for the output.
         var binaries = new SortedDictionary<SemanticVersion, string>(VersionComparer.VersionRelease);
-        foreach (var binaryPath in Directory.EnumerateFiles(
+        foreach (var binaryPath in _fileSystem.Directory.EnumerateFiles(
                      BinariesDirectory,
                      "v*_tailwindcss*",
                      SearchOption.TopDirectoryOnly))
@@ -163,7 +145,7 @@ internal sealed partial class BinaryManager
 
             try
             {
-                File.Delete(binaryPath);
+                _fileSystem.File.Delete(binaryPath);
                 _log.DeletedBinary(formattedVersionString);
             }
             catch (Exception ex)
@@ -194,7 +176,7 @@ internal sealed partial class BinaryManager
     /// </summary>
     /// <returns>Binary file name for the operating system.</returns>
     /// <exception cref="UnsupportedOperatingSystemException">The operating system running this app is not supported.</exception>
-    private static string DetermineBinaryFileName()
+    private string DetermineBinaryFileName()
     {
         var osArch = RuntimeInformation.OSArchitecture;
 
@@ -208,17 +190,20 @@ internal sealed partial class BinaryManager
                 $"Unsupported operating system architecture. Only {Architecture.X64} and {Architecture.Arm64} are supported.");
         }
 
+        const string binaryFileNamePrefix = "tailwindcss";
+
         if (OperatingSystem.IsWindows() && osArch is Architecture.X64)
         {
-            return $"tailwindcss-windows-{osArchIdentifier}.exe";
+            return $"{binaryFileNamePrefix}-windows-{osArchIdentifier}.exe";
         }
 
         if (OperatingSystem.IsLinux())
         {
-            var linuxBinaryFileName = $"tailwindcss-linux-{osArchIdentifier}";
+            var linuxBinaryFileName = $"{binaryFileNamePrefix}-linux-{osArchIdentifier}";
 
             // If the OS uses the musl library instead of glibc, download the binary that supports musl.
-            if (File.Exists("/lib/ld-musl-x86_64.so.1") || File.Exists("/lib/libc.musl-x86_64.so.1"))
+            if (_fileSystem.File.Exists("/lib/ld-musl-x86_64.so.1")
+                || _fileSystem.File.Exists("/lib/libc.musl-x86_64.so.1"))
             {
                 linuxBinaryFileName += "-musl";
             }
@@ -228,7 +213,7 @@ internal sealed partial class BinaryManager
 
         if (OperatingSystem.IsMacOS())
         {
-            return $"tailwindcss-macos-{osArchIdentifier}";
+            return $"{binaryFileNamePrefix}-macos-{osArchIdentifier}";
         }
 
         throw new UnsupportedOperatingSystemException(
@@ -255,7 +240,7 @@ internal sealed partial class BinaryManager
         downloadResponse.EnsureSuccessStatusCode();
 
         var fileBytes = await downloadResponse.Content.ReadAsByteArrayAsync(cancellationToken);
-        await File.WriteAllBytesAsync(binaryPath, fileBytes, cancellationToken);
+        await _fileSystem.File.WriteAllBytesAsync(binaryPath, fileBytes, cancellationToken);
         _log.Success(version);
 
         // If the OS is Linux or macOS, we need to make the binary executable in order to run it.
@@ -332,8 +317,8 @@ internal sealed partial class BinaryManager
                 parsedVersion!,
                 [
                     new GitHubReleaseAsset(
-                        _binaryFileName,
-                        new Uri(GitHubBaseUrl, $"releases/download/{parsedVersion}/{_binaryFileName}"))
+                        BinaryFileName,
+                        new Uri(GitHubBaseUrl, $"releases/download/{parsedVersion}/{BinaryFileName}"))
                 ]);
         }
 
@@ -341,16 +326,14 @@ internal sealed partial class BinaryManager
     }
 
     private sealed record GitHubReleaseAsset(
-        [property: JsonPropertyName("name")]
-        string FileName,
+        [property: JsonPropertyName("name")] string FileName,
         [property: JsonPropertyName("browser_download_url")]
         Uri DownloadUrl);
 
     private sealed record GitHubReleaseInfo(
         [property: JsonPropertyName("tag_name")]
         string Version,
-        [property: JsonPropertyName("assets")]
-        IReadOnlyList<GitHubReleaseAsset> Assets);
+        [property: JsonPropertyName("assets")] IReadOnlyList<GitHubReleaseAsset> Assets);
 
     private sealed partial class Log(ILogger logger)
     {
@@ -387,4 +370,43 @@ internal sealed partial class BinaryManager
         [LoggerMessage(Level = LogLevel.Error, Message = "Failed to delete Tailwind CSS {version}.")]
         public partial void FailedToDeleteBinary(Exception ex, string version);
     }
+}
+
+/// <summary>
+/// Manages the binary for the Tailwind CSS standalone CLI.
+/// </summary>
+internal interface IBinaryManager
+{
+    /// <summary>
+    /// The path to the binaries directory that resides next to the app.
+    /// </summary>
+    public string BinariesDirectory { get; }
+
+    /// <summary>
+    /// The binary file name.
+    /// </summary>
+    public string BinaryFileName { get; }
+
+    /// <summary>
+    /// The base URL for the GitHub API. Must end with a trailing slash.
+    /// </summary>
+    public Uri GitHubApiBaseUrl { get; }
+
+    /// <summary>
+    /// The base URL for the repo on GitHub. Must end with a trailing slash.
+    /// </summary>
+    public Uri GitHubBaseUrl { get; }
+
+    /// <summary>
+    /// Ensures that the requested Tailwind CSS standalone CLI binary is downloaded.
+    /// </summary>
+    /// <param name="versionArg">Optional version to download. Latest if not specified.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Path to the binary.</returns>
+    public Task<string> EnsureDownloadedAsync(string? versionArg, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Deletes all downloaded Tailwind CSS binaries.
+    /// </summary>
+    public void CleanDownloads();
 }

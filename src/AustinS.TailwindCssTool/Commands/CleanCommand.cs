@@ -6,9 +6,9 @@ namespace AustinS.TailwindCssTool.Commands;
 [RegisterCommands]
 internal sealed class CleanCommand
 {
-    private readonly BinaryManager _binaryManager;
+    private readonly IBinaryManager _binaryManager;
 
-    public CleanCommand(BinaryManager binaryManager)
+    public CleanCommand(IBinaryManager binaryManager)
     {
         _binaryManager = binaryManager;
     }
