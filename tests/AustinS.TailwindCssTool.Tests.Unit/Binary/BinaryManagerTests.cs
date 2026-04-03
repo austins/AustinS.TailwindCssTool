@@ -160,7 +160,7 @@ public sealed class BinaryManagerTests : IDisposable
         string? versionArg,
         string releaseEndpoint)
     {
-        // Arrange – v4.0.0 and v3.4.17 are installed; requested version does not exist.
+        // Arrange - v4.0.0 and v3.4.17 are installed; requested version does not exist.
         var latestInstalledPath = Path.Combine(_sut.BinariesDirectory, $"v4.0.0_{_sut.BinaryFileName}");
         _fileSystem.AddEmptyFile(latestInstalledPath);
         _fileSystem.AddEmptyFile(Path.Combine(_sut.BinariesDirectory, $"v3.4.17_{_sut.BinaryFileName}"));
