@@ -5,5 +5,5 @@ on:
         branches: [ main ]
 
 jobs:
-    test:
+    pr-test:
         uses: ./.github/workflows/test.yml
