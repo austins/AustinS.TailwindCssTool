@@ -17,7 +17,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="RichardSzalay.MockHttp" Version="7.0.0"/>
-        <PackageReference Include="TestableIO.System.IO.Abstractions.TestingHelpers" Version="22.1.0"/>
+        <PackageReference Include="TestableIO.System.IO.Abstractions.TestingHelpers" Version="22.1.1"/>
         <PackageReference Include="xunit.analyzers" Version="1.27.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
