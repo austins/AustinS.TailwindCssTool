@@ -1,0 +1,31 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="DEVELOPMENT.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="global.json" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+    <File Path="renovate.json" />
+  </Folder>
+  <Folder Name="/Solution Items/.github/" />
+  <Folder Name="/Solution Items/.github/actions/" />
+  <Folder Name="/Solution Items/.github/actions/setup-dotnet-environment/">
+    <File Path=".github/actions/setup-dotnet-environment/action.yml" />
+  </Folder>
+  <Folder Name="/Solution Items/.github/workflows/">
+    <File Path=".github/workflows/deploy.yml" />
+    <File Path=".github/workflows/main.yml" />
+    <File Path=".github/workflows/pr.yml" />
+    <File Path=".github/workflows/test.yml" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/AustinS.TailwindCssTool.ExampleWebApp/AustinS.TailwindCssTool.ExampleWebApp.csproj" />
+    <Project Path="src/AustinS.TailwindCssTool/AustinS.TailwindCssTool.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AustinS.TailwindCssTool.Tests.Unit/AustinS.TailwindCssTool.Tests.Unit.csproj" />
+  </Folder>
+</Solution>
