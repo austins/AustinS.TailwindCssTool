@@ -5,6 +5,7 @@ on:
         branches: [ main ]
         paths:
             - '.editorconfig'
+            - '*.slnx'
             - 'Directory.Build.props'
             - 'global.json'
             - 'src/**'
