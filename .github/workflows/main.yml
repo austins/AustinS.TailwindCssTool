@@ -3,6 +3,12 @@ name: Main
 on:
     push:
         branches: [ main ]
+        paths:
+            - '.editorconfig'
+            - 'Directory.Build.props'
+            - 'global.json'
+            - 'src/**'
+            - 'tests/**'
 
 concurrency:
     group: main
