@@ -236,6 +236,34 @@ public sealed class BinaryManagerTests : IDisposable
     }
 
     [Fact]
+    public void CleanDownloads_Succeeds_DeletesAllBinaries()
+    {
+        // Arrange
+        var fileSystem = Substitute.For<IFileSystem>();
+        var binaryPath1 = Path.Combine(_sut.BinariesDirectory, $"v4.0.0_{_sut.BinaryFileName}");
+        var binaryPath2 = Path.Combine(_sut.BinariesDirectory, $"v3.4.0_{_sut.BinaryFileName}");
+
+        fileSystem.Directory.Exists(_sut.BinariesDirectory).Returns(true);
+        fileSystem
+            .Directory.EnumerateFiles(_sut.BinariesDirectory, "v*_tailwindcss*", SearchOption.TopDirectoryOnly)
+            .Returns([binaryPath1, binaryPath2]);
+
+        var deletedPaths = new List<string>();
+        fileSystem.File.When(f => f.Delete(Arg.Any<string>())).Do(call => deletedPaths.Add(call.Arg<string>()));
+
+        var sut = new BinaryManager(
+            fileSystem,
+            Substitute.For<IHttpClientFactory>(),
+            Substitute.For<ILogger<BinaryManager>>());
+
+        // Act
+        sut.CleanDownloads();
+
+        // Assert
+        deletedPaths.Should().Equal(binaryPath2, binaryPath1);
+    }
+
+    [Fact]
     public void CleanDownloads_DeletionFails_ContinuesAndDoesNotThrow()
     {
         // Arrange

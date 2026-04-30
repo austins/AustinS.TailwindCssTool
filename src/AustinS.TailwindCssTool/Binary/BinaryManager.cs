@@ -85,15 +85,21 @@ internal sealed partial class BinaryManager : IBinaryManager
         {
             // If getting release info from GitHub failed for any reason other than a 404,
             // attempt to use the latest installed binary if any exist for the current command.
-            var latestInstalledVersion = _fileSystem
-                .Directory.GetFiles(BinariesDirectory, $"v*_{BinaryFileName}", SearchOption.TopDirectoryOnly)
-                .Select(x =>
+            SemanticVersion? latestInstalledVersion = null;
+            foreach (var path in _fileSystem.Directory.GetFiles(
+                         BinariesDirectory,
+                         $"v*_{BinaryFileName}",
+                         SearchOption.TopDirectoryOnly))
+            {
+                var fileName = Path.GetFileName(path);
+                var version = SemanticVersion.Parse(fileName[1..fileName.IndexOf('_', StringComparison.Ordinal)]);
+
+                if (latestInstalledVersion is null
+                    || VersionComparer.Compare(version, latestInstalledVersion, VersionComparison.VersionRelease) > 0)
                 {
-                    var fileName = Path.GetFileName(x);
-                    return SemanticVersion.Parse(fileName[1..fileName.IndexOf('_', StringComparison.Ordinal)]);
-                })
-                .OrderDescending(VersionComparer.VersionRelease)
-                .FirstOrDefault();
+                    latestInstalledVersion = version;
+                }
+            }
 
             // If no version is installed, rethrow.
             if (latestInstalledVersion is null)
@@ -120,7 +126,7 @@ internal sealed partial class BinaryManager : IBinaryManager
 
         // Make sure we're only deleting files for the binaries.
         // Keep them sorted by version for the output.
-        var binaries = new SortedDictionary<SemanticVersion, string>(VersionComparer.VersionRelease);
+        var binaries = new Dictionary<SemanticVersion, string>();
         foreach (var binaryPath in _fileSystem.Directory.EnumerateFiles(
                      BinariesDirectory,
                      "v*_tailwindcss*",
@@ -139,7 +145,7 @@ internal sealed partial class BinaryManager : IBinaryManager
             return;
         }
 
-        foreach (var (version, binaryPath) in binaries)
+        foreach (var (version, binaryPath) in binaries.OrderBy(x => x.Key, VersionComparer.VersionRelease))
         {
             var formattedVersionString = $"v{version}";
 
