@@ -13,12 +13,16 @@ jobs:
             id-token: write
         environment: nuget
         runs-on: ubuntu-latest
+        env:
+            NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
         steps:
             -   name: Checkout
                 uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
             -   uses: ./.github/actions/setup-dotnet-environment
+            -   name: Restore dependencies
+                run: dotnet restore --locked-mode
             -   name: Pack
-                run: dotnet pack ./src/AustinS.TailwindCssTool -c Release /p:Version=$RELEASE_VERSION
+                run: dotnet pack ./src/AustinS.TailwindCssTool --no-restore -c Release /p:Version=$RELEASE_VERSION
                 env:
                     RELEASE_VERSION: ${{ github.event.release.tag_name }}
             -   name: NuGet login
