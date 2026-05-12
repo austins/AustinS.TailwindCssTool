@@ -12,7 +12,7 @@ jobs:
                 uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
             -   uses: ./.github/actions/setup-dotnet-environment
             -   name: Restore dependencies
-                run: dotnet restore --locked-mode
+                run: dotnet restore ./tests/AustinS.TailwindCssTool.Tests.Unit --locked-mode
             -   name: Test for .NET 8
                 run: dotnet test --no-restore --framework net8.0 -c Release --results-directory ./test-results -- --report-ctrf
             -   name: Test for .NET 9
