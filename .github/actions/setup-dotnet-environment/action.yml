@@ -14,4 +14,3 @@ runs:
             with:
                 path: ${{ github.workspace }}/.nuget/packages
                 key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-                restore-keys: ${{ runner.os }}-nuget-
