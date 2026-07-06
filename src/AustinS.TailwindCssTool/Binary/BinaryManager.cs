@@ -252,7 +252,10 @@ internal sealed partial class BinaryManager : IBinaryManager
         // If the OS is Linux or macOS, we need to make the binary executable in order to run it.
         if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
         {
+#pragma warning disable S4036 // Use an absolute path for this command.
             using var chmodProcess = Process.Start("chmod", $"+x {binaryPath}");
+#pragma warning restore S4036 // Use an absolute path for this command.
+
             await chmodProcess.WaitForExitAsync(cancellationToken);
         }
     }
