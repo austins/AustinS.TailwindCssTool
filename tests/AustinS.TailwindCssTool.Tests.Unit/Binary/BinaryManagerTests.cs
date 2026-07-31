@@ -249,7 +249,7 @@ public sealed class BinaryManagerTests : IDisposable
             .Returns([binaryPath1, binaryPath2]);
 
         var deletedPaths = new List<string>();
-        fileSystem.File.When(f => f.Delete(Arg.Any<string>())).Do(call => deletedPaths.Add(call.Arg<string>()));
+        fileSystem.File.When(f => f.Delete(Arg.Any<string>())).Do(call => deletedPaths.Add(call.Arg<string>()!));
 
         var sut = new BinaryManager(
             fileSystem,
