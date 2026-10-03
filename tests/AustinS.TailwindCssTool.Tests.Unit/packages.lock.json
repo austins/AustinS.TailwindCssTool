@@ -375,7 +375,7 @@
           "Microsoft.Extensions.Http": "[10.0.12, )",
           "Microsoft.Extensions.Logging.Console": "[10.0.12, )",
           "NuGet.Versioning": "[7.9.0, )",
-          "TestableIO.System.IO.Abstractions.Wrappers": "[22.2.0, )"
+          "TestableIO.System.IO.Abstractions.Wrappers": "[22.3.0, )"
         }
       }
     },
@@ -780,7 +780,7 @@
           "Microsoft.Extensions.Http": "[10.0.12, )",
           "Microsoft.Extensions.Logging.Console": "[10.0.12, )",
           "NuGet.Versioning": "[7.9.0, )",
-          "TestableIO.System.IO.Abstractions.Wrappers": "[22.2.0, )"
+          "TestableIO.System.IO.Abstractions.Wrappers": "[22.3.0, )"
         }
       }
     },
@@ -1185,7 +1185,7 @@
           "Microsoft.Extensions.Http": "[10.0.12, )",
           "Microsoft.Extensions.Logging.Console": "[10.0.12, )",
           "NuGet.Versioning": "[7.9.0, )",
-          "TestableIO.System.IO.Abstractions.Wrappers": "[22.2.0, )"
+          "TestableIO.System.IO.Abstractions.Wrappers": "[22.3.0, )"
         }
       }
     }
