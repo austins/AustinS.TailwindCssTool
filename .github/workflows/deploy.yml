@@ -20,7 +20,7 @@ jobs:
                 uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
             -   uses: ./.github/actions/setup-dotnet-environment
             -   name: Restore dependencies
-                run: dotnet restore ./src/AustinS.TailwindCssTool --locked-mode
+                run: dotnet restore ./src/AustinS.TailwindCssTool
             -   name: Pack
                 run: dotnet pack ./src/AustinS.TailwindCssTool --no-restore -c Release /p:Version=$RELEASE_VERSION
                 env:
