@@ -4,7 +4,9 @@ using NuGet.Versioning;
 using System.Diagnostics;
 using System.IO.Abstractions;
 using System.Net;
+#if !NET11_0_OR_GREATER
 using System.Net.Http.Json;
+#endif
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 

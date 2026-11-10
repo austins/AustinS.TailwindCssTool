@@ -4,16 +4,11 @@ namespace AustinS.TailwindCssTool.Tests.Unit.Binary;
 
 public sealed class BinaryProcessTests : IDisposable
 {
-    private readonly BinaryProcess _sut;
-
-    public BinaryProcessTests()
-    {
-        _sut = new BinaryProcess(
-            "/path/to/binary",
-            "input.css",
-            "output.css",
-            Substitute.For<ILogger<BinaryProcess>>());
-    }
+    private readonly BinaryProcess _sut = new(
+        "/path/to/binary",
+        "input.css",
+        "output.css",
+        Substitute.For<ILogger<BinaryProcess>>());
 
     public void Dispose()
     {

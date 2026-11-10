@@ -4,12 +4,7 @@ namespace AustinS.TailwindCssTool.Tests.Unit.Binary;
 
 public sealed class BinaryProcessFactoryTests
 {
-    private readonly BinaryProcessFactory _sut;
-
-    public BinaryProcessFactoryTests()
-    {
-        _sut = new BinaryProcessFactory(Substitute.For<ILoggerFactory>());
-    }
+    private readonly BinaryProcessFactory _sut = new(Substitute.For<ILoggerFactory>());
 
     [Theory]
     [InlineData(false, false)]

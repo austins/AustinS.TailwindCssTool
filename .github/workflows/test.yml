@@ -4,6 +4,11 @@ on: [ workflow_call, workflow_dispatch ]
 
 jobs:
     test:
+        name: Test (${{ matrix.framework }})
+        strategy:
+            fail-fast: false
+            matrix:
+                framework: [ net10.0, net11.0 ]
         runs-on: ubuntu-latest
         env:
             NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
@@ -13,12 +18,8 @@ jobs:
             -   uses: ./.github/actions/setup-dotnet-environment
             -   name: Restore dependencies
                 run: dotnet restore ./tests/AustinS.TailwindCssTool.Tests.Unit
-            -   name: Test for .NET 8
-                run: dotnet test --no-restore --framework net8.0 -c Release --results-directory ./test-results -- --report-xunit-ctrf
-            -   name: Test for .NET 9
-                run: dotnet test --no-restore --framework net9.0 -c Release --results-directory ./test-results -- --report-xunit-ctrf
-            -   name: Test for .NET 10
-                run: dotnet test --no-restore --framework net10.0 -c Release --results-directory ./test-results -- --report-xunit-ctrf
+            -   name: Test
+                run: dotnet test --no-restore --framework ${{ matrix.framework }} -c Release --results-directory ./test-results -- --report-xunit-ctrf
             -   if: always()
                 name: Publish test report
                 uses: ctrf-io/github-test-reporter@dbb08957b5b2af918b39136ab2c5532002c7649b # v1.3.2

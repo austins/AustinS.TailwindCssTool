@@ -19,7 +19,10 @@ public sealed class BinaryManagerTests : IDisposable
 
         _http = new MockHttpMessageHandler();
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
+
+#pragma warning disable IDISP014 // BinaryManager disposes each client it gets, so the factory must return a new one per call.
         httpClientFactory.CreateClient(BinaryManager.HttpClientName).Returns(_ => new HttpClient(_http, false));
+#pragma warning restore IDISP014
 
         _sut = new BinaryManager(_fileSystem, httpClientFactory, Substitute.For<ILogger<BinaryManager>>());
     }

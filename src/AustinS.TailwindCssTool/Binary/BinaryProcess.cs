@@ -44,6 +44,13 @@ internal sealed partial class BinaryProcess : IBinaryProcess
             }
         };
 
+#if NET11_0_OR_GREATER
+        if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+        {
+            _process.StartInfo.KillOnParentExit = true;
+        }
+#endif
+
         _process.OutputDataReceived += LogOutput;
         _process.ErrorDataReceived += LogOutput;
     }

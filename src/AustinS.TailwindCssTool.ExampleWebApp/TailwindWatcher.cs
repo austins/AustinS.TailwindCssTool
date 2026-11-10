@@ -40,6 +40,11 @@ internal sealed partial class TailwindWatcher
             }
         };
 
+        if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+        {
+            _process.StartInfo.KillOnParentExit = true;
+        }
+
         _process.OutputDataReceived += LogOutput;
         _process.ErrorDataReceived += LogOutput;
     }
