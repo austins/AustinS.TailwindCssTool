@@ -38,7 +38,7 @@ Here is an example target you can place in your web project's csproj file to run
 ```
 <Target Name="GenerateTailwindCss" AfterTargets="BeforeBuild">
     <Exec Command="dotnet tool restore"/>
-    <Exec Command="dotnet tool run tailwindcss build -t v4.1.18 -m -i <PATH TO YOUR TAILWIND CSS FILE> -o <PATH THE OUTPUT CSS FILE WILL SAVE TO>"/>
+    <Exec Command="dotnet tool run tailwindcss build -t v4.3.5 -m -i <PATH TO YOUR TAILWIND CSS FILE> -o <PATH THE OUTPUT CSS FILE WILL SAVE TO>"/>
 </Target>
 ```
 
